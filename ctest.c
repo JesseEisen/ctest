@@ -3,7 +3,12 @@
 #include <string.h>
 #include <dlfcn.h>
 #include <ctype.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include "list.h"
+
+#define MAXARGS 20
 
 struct list_head  namelist;
 
@@ -117,6 +122,8 @@ gathertest(char *file)
 	while((chars=getline(&line, &linesize, fp)) != -1){
 		parseline(line, chars);
 	}
+
+	fclose(fp);
 }
 
 
@@ -131,6 +138,59 @@ readfile(int nfile, char **files)
 }
 
 
+void
+showfuncname(void)
+{
+	Funcinfo *fi, *fitemp;
+
+	list_for_each_entry_safe(fi, fitemp, &namelist, node){
+		printf("%s\n", fi->funcname);
+		list_del(&fi->node);
+		free(fi->funcname);
+		free(fi);
+	}
+
+}
+
+void
+compilefile(int argc, char **argv)
+{
+	pid_t  pid;
+
+	char *args[MAXARGS] = {"gcc", "-fPIC", "-shared", "-o", "libtemps.so"};
+	int i = 5;
+
+	for(; i<argc+5; i++){
+		args[i] = argv[i-4];
+	}
+
+	args[i] = NULL;
+
+	if((pid=fork()) < 0)
+		return;
+	else if(pid == 0)
+		execvp(args[0], args);
+	else
+		waitpid(pid, NULL, 0);
+}
+
+void
+lookupsym()
+{
+	Funcinfo  *fi;
+	void      *fptr;
+	void *h = dlopen("./libtemps.so", RTLD_NOW | RTLD_GLOBAL);
+	
+	list_for_each_entry(fi, &namelist, node){
+		fptr = dlsym(h, fi->funcname);
+		void (*f)() = fptr;
+		f();
+	}
+
+	dlclose(h);
+}
+
+
 int 
 main(int argc, char **argv)
 {
@@ -140,17 +200,13 @@ main(int argc, char **argv)
 	}
 
 	ctestinit();
-
 	readfile(argc, argv);
 
-	Funcinfo *fi, *fitemp;
-
-	list_for_each_entry_safe(fi,fitemp, &namelist, node){
-		printf("%s\n", fi->funcname);
-		list_del(&fi->node);
-		free(fi->funcname);
-		free(fi);
-	}
+	compilefile(argc, argv);
+	printf("lookup symbol\n");
+	lookupsym();
+	
+	showfuncname();
 
 	return 0;
 }
