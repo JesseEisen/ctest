@@ -1,5 +1,5 @@
 #include<stdio.h>
-	
+
 void
 Test_isalnum(void *c)
 {

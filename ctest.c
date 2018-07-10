@@ -7,25 +7,28 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include "list.h"
+#include "color.h"
 
 #define MAXARGS 20
+#define TEMPFILE "libtest.so"
 
 struct list_head  namelist;
 
 typedef struct Funcinfo Funcinfo;
 struct Funcinfo{
 	struct list_head  node;
-	char       		 *funcname;
+	char *funcname;
 };
 
-void 
+void
 ctestinit(void)
 {
 	INIT_LIST_HEAD(&namelist);
+    printf(COLOR(GREEN, "==== TEST START ====\n"));
 }
 
 
-char* 
+char*
 lefttrim(char *s)
 {
 	int len = strlen(s);
@@ -41,7 +44,7 @@ lefttrim(char *s)
 	return s;
 }
 
-char* 
+char*
 righttrim(char *s)
 {
 	int len = strlen(s);
@@ -58,8 +61,7 @@ righttrim(char *s)
 }
 
 
-
-char* 
+char*
 strtrim(char *s)
 {
 	s = lefttrim(s);
@@ -81,7 +83,7 @@ parseline(char *buffer, size_t len)
 {
 	char *start, *end, *funcname;
 	Funcinfo  *fi = malloc(sizeof(Funcinfo));
-		
+
 	if((start = strstr(buffer, "Test_")) == NULL)
 		return;
 
@@ -92,7 +94,7 @@ parseline(char *buffer, size_t len)
 			end--;
 		else if(end == NULL)
 			return;
-		
+
 		funcname = strndup(start, end-start);
 		funcname = strtrim(funcname);
 		fi->funcname = funcname;
@@ -115,7 +117,7 @@ gathertest(char *file)
 	fp = fopen(file,"r");
 	if(fp == NULL)
 		return;
-	
+
 	line = malloc(linesize * sizeof(char));
 	if(line == NULL)  return;
 
@@ -133,11 +135,11 @@ istestfile(char *filename)
 }
 
 
-void 
+void
 readfile(int nfile, char **files)
 {
 	int i;
-	
+
 	for(i=0; i<nfile; i++){
 		if(istestfile(files[i]) == 0)
 			gathertest(files[i]);
@@ -151,7 +153,7 @@ showfuncname(void)
 	Funcinfo *fi, *fitemp;
 
 	list_for_each_entry_safe(fi, fitemp, &namelist, node){
-		printf("%s\n", fi->funcname);
+		//printf("%s\n", fi->funcname);
 		list_del(&fi->node);
 		free(fi->funcname);
 		free(fi);
@@ -159,35 +161,51 @@ showfuncname(void)
 
 }
 
+char *
+fullpath(char *file)
+{
+    return realpath(file, NULL);
+}
+
+
 void
 compilefile(int argc, char **argv)
 {
 	pid_t  pid;
+    int    nfiles;
 
-	char *args[MAXARGS] = {"gcc", "-fPIC", "-shared", "-o", "libtest.so"};
+	char *args[MAXARGS] = {"gcc", "-fPIC", "-shared", "-o", TEMPFILE};
 	int i = 5;
 
 	for(; i<argc+5; i++){
-		args[i] = argv[i-4];
+		args[i] = fullpath(argv[i-4]);
 	}
 
+    nfiles = i;
 	args[i] = NULL;
 
 	if((pid=fork()) < 0)
 		return;
 	else if(pid == 0)
 		execvp(args[0], args);
-	else
+	else{
 		waitpid(pid, NULL, 0);
+        for(i=5; i<nfiles; i++){
+            free(args[i]);
+        }
+    }
+
+
 }
+
 
 void
 lookupsym()
 {
 	Funcinfo  *fi;
 	void      *fptr;
-	void *h = dlopen("./libtest.so", RTLD_NOW | RTLD_GLOBAL);
-	
+	void *h = dlopen("./"TEMPFILE, RTLD_NOW | RTLD_GLOBAL);
+
 	list_for_each_entry(fi, &namelist, node){
 		printf("%s\n", fi->funcname);
 		fptr = dlsym(h, fi->funcname);
@@ -199,7 +217,7 @@ lookupsym()
 }
 
 
-int 
+int
 main(int argc, char **argv)
 {
 	if(argc < 1){
@@ -213,8 +231,10 @@ main(int argc, char **argv)
 	compilefile(argc, argv);
 	printf("lookup symbol\n");
 	lookupsym();
-	
+
 	showfuncname();
 
+    remove("./"TEMPFILE);
+    printf(COLOR(GREEN, "==== TEST END ====\n"));
 	return 0;
 }
