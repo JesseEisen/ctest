@@ -126,14 +126,21 @@ gathertest(char *file)
 	fclose(fp);
 }
 
+int
+istestfile(char *filename)
+{
+	return strncmp(filename, "Test_", 5);
+}
+
 
 void 
 readfile(int nfile, char **files)
 {
 	int i;
-
+	
 	for(i=0; i<nfile; i++){
-		gathertest(files[i]);
+		if(istestfile(files[i]) == 0)
+			gathertest(files[i]);
 	}
 }
 
@@ -157,7 +164,7 @@ compilefile(int argc, char **argv)
 {
 	pid_t  pid;
 
-	char *args[MAXARGS] = {"gcc", "-fPIC", "-shared", "-o", "libtemps.so"};
+	char *args[MAXARGS] = {"gcc", "-fPIC", "-shared", "-o", "libtest.so"};
 	int i = 5;
 
 	for(; i<argc+5; i++){
@@ -179,9 +186,10 @@ lookupsym()
 {
 	Funcinfo  *fi;
 	void      *fptr;
-	void *h = dlopen("./libtemps.so", RTLD_NOW | RTLD_GLOBAL);
+	void *h = dlopen("./libtest.so", RTLD_NOW | RTLD_GLOBAL);
 	
 	list_for_each_entry(fi, &namelist, node){
+		printf("%s\n", fi->funcname);
 		fptr = dlsym(h, fi->funcname);
 		void (*f)() = fptr;
 		f();
