@@ -2,13 +2,66 @@
 #include <stdlib.h>
 #include <string.h>
 #include <dlfcn.h>
+#include <ctype.h>
 #include "list.h"
+
+struct list_head  namelist;
 
 typedef struct Funcinfo Funcinfo;
 struct Funcinfo{
-	list_head  node;
-	char       *funcname;
+	struct list_head  node;
+	char       		 *funcname;
 };
+
+void 
+ctestinit(void)
+{
+	INIT_LIST_HEAD(&namelist);
+}
+
+
+char* 
+lefttrim(char *s)
+{
+	int len = strlen(s);
+	char *cur = s;
+
+	while(*cur && isspace(*cur)){
+		cur++;
+		--len;
+	}
+
+	if(s != cur) memmove(s, cur, len+1);
+
+	return s;
+}
+
+char* 
+righttrim(char *s)
+{
+	int len = strlen(s);
+	char *cur = s + len - 1;
+	short is_space;
+
+	while(cur != s && (isspace(*cur) || *cur == '\n'))
+		--cur;
+
+	is_space = (isspace(*cur) || *cur == '\n');
+	cur[is_space ? 0 : 1] = '\0';
+
+	return s;
+}
+
+
+
+char* 
+strtrim(char *s)
+{
+	s = lefttrim(s);
+	s = righttrim(s);
+
+	return s;
+}
 
 
 /*
@@ -19,15 +72,51 @@ struct Funcinfo{
  */
 
 void
+parseline(char *buffer, size_t len)
+{
+	char *start, *end, *funcname;
+	Funcinfo  *fi = malloc(sizeof(Funcinfo));
+		
+	if((start = strstr(buffer, "Test_")) == NULL)
+		return;
+
+	/* start of line or behind the type */
+	if((start == buffer) || *(--start) == ' '){
+		end = strchr(buffer, '(');
+		if(end != NULL && *(end-1) == ' ')
+			end--;
+		else if(end == NULL)
+			return;
+		
+		funcname = strndup(start, end-start);
+		funcname = strtrim(funcname);
+		fi->funcname = funcname;
+		list_add(&fi->node, &namelist);
+	}else{
+		//do nothing
+	}
+
+}
+
+
+void
 gathertest(char *file)
 {
-	FILE *fp;
+	FILE  *fp;
+	char  *line;
+	size_t linesize = 100;
+	size_t chars = 0;
 
 	fp = fopen(file,"r");
 	if(fp == NULL)
 		return;
+	
+	line = malloc(linesize * sizeof(char));
+	if(line == NULL)  return;
 
-
+	while((chars=getline(&line, &linesize, fp)) != -1){
+		parseline(line, chars);
+	}
 }
 
 
@@ -36,7 +125,7 @@ readfile(int nfile, char **files)
 {
 	int i;
 
-	for(i=0; i < nfile; i++){
+	for(i=0; i<nfile; i++){
 		gathertest(files[i]);
 	}
 }
@@ -50,5 +139,18 @@ main(int argc, char **argv)
 		return 0;
 	}
 
+	ctestinit();
+
 	readfile(argc, argv);
+
+	Funcinfo *fi, *fitemp;
+
+	list_for_each_entry_safe(fi,fitemp, &namelist, node){
+		printf("%s\n", fi->funcname);
+		list_del(&fi->node);
+		free(fi->funcname);
+		free(fi);
+	}
+
+	return 0;
 }
