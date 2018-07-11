@@ -1,22 +1,21 @@
-#include<stdio.h>
+#include <stdio.h>
+#include "util.h"
 
 void
 Test_isalnum(void *c)
 {
-	printf("isalnum\n");
 }
 
 
 void Test_isalpha (void *c)
 {
-	printf("isalpha\n");
-
+    intequal(1, 2, __LINE__, __FUNCTION__, __FILE__);
 }
 
 
 void
    Test_iscntrl     (void *c)
 {
-	printf("iscntrl\n");
+    intequal(1, 1, __LINE__, __FUNCTION__, __FILE__);
 
 }

@@ -20,6 +20,7 @@ struct Funcinfo{
 	char *funcname;
 };
 
+
 void
 ctestinit(void)
 {
@@ -173,16 +174,18 @@ compilefile(int argc, char **argv)
 {
 	pid_t  pid;
     int    nfiles;
+    char  *libflag = "-lutil";
 
-	char *args[MAXARGS] = {"gcc", "-fPIC", "-shared", "-o", TEMPFILE};
-	int i = 5;
+	char *args[MAXARGS] = {"gcc", "-L.", "-fPIC", "-shared", "-o", TEMPFILE};
+	int i = 6;
 
 	for(; i<argc+5; i++){
-		args[i] = fullpath(argv[i-4]);
+		args[i] = fullpath(argv[i-5]);
 	}
 
-    nfiles = i;
+    args[i++] = strdup(libflag);
 	args[i] = NULL;
+    nfiles = i;
 
 	if((pid=fork()) < 0)
 		return;
@@ -190,7 +193,7 @@ compilefile(int argc, char **argv)
 		execvp(args[0], args);
 	else{
 		waitpid(pid, NULL, 0);
-        for(i=5; i<nfiles; i++){
+        for(i=6; i<nfiles-1; i++){
             free(args[i]);
         }
     }
