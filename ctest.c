@@ -15,7 +15,7 @@
 struct list_head  namelist;
 
 typedef struct Funcinfo Funcinfo;
-struct Funcinfo{
+struct Funcinfo {
 	struct list_head  node;
 	char *funcname;
 };
@@ -25,7 +25,7 @@ void
 ctestinit(void)
 {
 	INIT_LIST_HEAD(&namelist);
-    printf(COLOR(GREEN, "==== TEST START ====\n"));
+	printf(COLOR(GREEN, "==== TEST START ====\n"));
 }
 
 
@@ -89,7 +89,7 @@ parseline(char *buffer, size_t len)
 		return;
 
 	/* start of line or behind the type */
-	if((start == buffer) || *(--start) == ' '){
+	if((start == buffer) || *(--start) == ' ') {
 		end = strchr(buffer, '(');
 		if(end != NULL && *(end-1) == ' ')
 			end--;
@@ -100,7 +100,7 @@ parseline(char *buffer, size_t len)
 		funcname = strtrim(funcname);
 		fi->funcname = funcname;
 		list_add(&fi->node, &namelist);
-	}else{
+	} else {
 		//do nothing
 	}
 
@@ -165,7 +165,7 @@ showfuncname(void)
 char *
 fullpath(char *file)
 {
-    return realpath(file, NULL);
+	return realpath(file, NULL);
 }
 
 
@@ -184,20 +184,19 @@ compilefile(int argc, char **argv)
 	}
 
     args[i++] = strdup(libflag);
+	nfiles = i;
 	args[i] = NULL;
-    nfiles = i;
 
 	if((pid=fork()) < 0)
 		return;
 	else if(pid == 0)
 		execvp(args[0], args);
-	else{
+	else {
 		waitpid(pid, NULL, 0);
         for(i=6; i<nfiles-1; i++){
             free(args[i]);
         }
     }
-
 
 }
 
@@ -237,7 +236,7 @@ main(int argc, char **argv)
 
 	showfuncname();
 
-    remove("./"TEMPFILE);
-    printf(COLOR(GREEN, "==== TEST END ====\n"));
+	remove("./"TEMPFILE);
+	printf(COLOR(GREEN, "==== TEST END ====\n"));
 	return 0;
 }
