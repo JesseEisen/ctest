@@ -173,8 +173,8 @@ void
 compilefile(int argc, char **argv)
 {
 	pid_t  pid;
-    int    nfiles;
-    char  *libflag = "-lutil";
+	int    nfiles;
+	char  *libflag = "-lutil";
 
 	char *args[MAXARGS] = {"gcc", "-L.", "-fPIC", "-shared", "-o", TEMPFILE};
 	int i = 6;
@@ -183,7 +183,7 @@ compilefile(int argc, char **argv)
 		args[i] = fullpath(argv[i-5]);
 	}
 
-    args[i++] = strdup(libflag);
+	args[i++] = strdup(libflag);
 	nfiles = i;
 	args[i] = NULL;
 
@@ -193,9 +193,9 @@ compilefile(int argc, char **argv)
 		execvp(args[0], args);
 	else {
 		waitpid(pid, NULL, 0);
-        for(i=6; i<nfiles-1; i++){
-            free(args[i]);
-        }
+		for(i=6; i<nfiles-1; i++){
+			free(args[i]);
+		}
     }
 
 }
