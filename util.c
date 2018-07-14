@@ -85,16 +85,18 @@ intequal
 void
 strequal
 (
-    char* expect,
-    char* actual,
-    int lineno,
-    const char *fcname,
-    const char *fname
-)
+ 	char* expect,
+ 	char* actual,
+ 	int lineno,
+ 	const char *fcname,
+ 	const char *fname
+ )
 {
-    if((expect != NULL) && (actual != NULL))
-        if(strcmp(expect, actual) != 0)
-            display_assertion(fname, lineno);
-        else
-            display_output("passed");
+	if((expect != NULL) && (actual != NULL))
+		if(strcmp(expect, actual) != 0)
+			display_assertion(fname, lineno);
+		else
+			display_output("passed");
 }
+
+

@@ -29,6 +29,7 @@ Test_cregex_match(void)
 	cregex_t  reg;
 	cregex_init(&reg, 10);
 	assert(cregex_match(&reg, pattern, string) != -1);
+	assert(reg->nmatched == 4);
 	cregex_free(&reg);
 	printf("pass\n");
 }
@@ -42,6 +43,7 @@ Test_cregex_match_all(void)
 	cregex_t  reg;
 	cregex_init(&reg, 10);
 	assert(cregex_match_all(&reg,pattern2,string2) != -1);
+	assert(reg->nmatched == 4);
 	cregex_free(&reg);
 	printf("pass\n");
 }
