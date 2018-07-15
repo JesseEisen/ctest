@@ -92,11 +92,12 @@ strequal
  	const char *fname
  )
 {
-	if((expect != NULL) && (actual != NULL))
+	if((expect != NULL) && (actual != NULL)){
 		if(strcmp(expect, actual) != 0)
 			display_assertion(fname, lineno);
 		else
 			display_output("passed");
+	}
 }
 
 

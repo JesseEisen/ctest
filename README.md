@@ -80,7 +80,7 @@ First, we compile a dynamic library `libutil.so`
 $ gcc -fPIC -shared util.c -o libutil.so
 ```
 
-And now just for experiment we need to set `LD_LIBRARY_PATH=.`. Where the path is the path of `libutil.so`. If we do so, we can write this testfile `Test_example.c`
+And now just for experiment we need to set `LD_LIBRARY_PATH=.` or `DYLD_LIBRARY_PATH=.` in Max OS. Where the path is the path of `libutil.so`. If we do so, we can write this testfile `Test_example.c`
 
 ```c
 #include <stdio.h>

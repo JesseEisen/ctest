@@ -10,6 +10,7 @@
 #include "color.h"
 
 #define MAXARGS 20
+#define MAX_PATH_LEN 100
 #define TEMPFILE "libtest.so"
 
 struct list_head  namelist;
@@ -176,7 +177,7 @@ compilefile(int argc, char **argv)
 	int    nfiles;
 	char  *libflag = "-lutil";
 
-	char *args[MAXARGS] = {"gcc", "-L.", "-fPIC", "-shared", "-o", TEMPFILE};
+	char *args[MAXARGS] = {"gcc", "-L/Users/jesse/tools/", "-fPIC", "-shared", "-o", TEMPFILE};
 	int i = 6;
 
 	for(; i<argc+5; i++){
@@ -206,7 +207,7 @@ lookupsym()
 {
 	Funcinfo  *fi;
 	void      *fptr;
-	void *h = dlopen("./"TEMPFILE, RTLD_NOW | RTLD_GLOBAL);
+	void *h = dlopen(TEMPFILE, RTLD_NOW | RTLD_GLOBAL);
 
 	list_for_each_entry(fi, &namelist, node){
 		printf("%s\n", fi->funcname);
