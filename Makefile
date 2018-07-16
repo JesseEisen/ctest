@@ -1,5 +1,5 @@
 ctest:
-	gcc ctest.c -o ctest -ldl
+	gcc -rdynamic ctest.c -o ctest -ldl
 
 util:
 	gcc -fPIC -shared util.c -o libutil.so

@@ -80,7 +80,19 @@ First, we compile a dynamic library `libutil.so`
 $ gcc -fPIC -shared util.c -o libutil.so
 ```
 
-And now just for experiment we need to set `LD_LIBRARY_PATH=.` or `DYLD_LIBRARY_PATH=.` in Max OS. Where the path is the path of `libutil.so`. If we do so, we can write this testfile `Test_example.c`
+If you don't have super user privilage, You should set the environment parameter `CTEST_LIB_PATH` by the path of  `libutil.so`. For instant:
+
+```shell
+$ ls
+libutil.so
+$ pwd
+/home/user/lib
+$ export CTEST_LIB_PATH=/home/user/lib
+```
+
+if not set, the path will use the default value `/usr/local/lib`. This will cause open library file error. So,i recommend you use the first approach.
+
+~~And now just for experiment we need to set `LD_LIBRARY_PATH=.` or `DYLD_LIBRARY_PATH=.` in Max OS. Where the path is the path of `libutil.so`.~~ If we do so, we can write this testfile `Test_example.c`
 
 ```c
 #include <stdio.h>

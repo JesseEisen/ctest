@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <errno.h>
 #include "list.h"
 #include "color.h"
 
@@ -14,6 +15,8 @@
 #define TEMPFILE "libtest.so"
 
 struct list_head  namelist;
+char   libpath[MAX_PATH_LEN];
+char   testlibpath[MAX_PATH_LEN];
 
 typedef struct Funcinfo Funcinfo;
 struct Funcinfo {
@@ -26,7 +29,17 @@ void
 ctestinit(void)
 {
 	INIT_LIST_HEAD(&namelist);
+	
+	char *enval = getenv("CTEST_LIB_PATH");
+	if(enval == NULL)
+		sprintf(libpath, "/usr/local/lib");
+	else
+		sprintf(libpath, "%s", enval);
+
+	sprintf(testlibpath, "%s/%s", libpath, TEMPFILE);
+	
 	printf(COLOR(GREEN, "==== TEST START ====\n"));
+
 }
 
 
@@ -176,12 +189,16 @@ compilefile(int argc, char **argv)
 	pid_t  pid;
 	int    nfiles;
 	char  *libflag = "-lutil";
+	char  linkpath[MAX_PATH_LEN], runpath[MAX_PATH_LEN];
 
-	char *args[MAXARGS] = {"gcc", "-L/Users/jesse/tools/", "-fPIC", "-shared", "-o", TEMPFILE};
-	int i = 6;
+	sprintf(linkpath, "-L%s", libpath);
+	sprintf(runpath, "-Wl,-rpath=%s", libpath);
 
-	for(; i<argc+5; i++){
-		args[i] = fullpath(argv[i-5]);
+	char *args[MAXARGS] = {"gcc", linkpath, "-fPIC", "-shared", "-o", TEMPFILE, runpath};
+	int i = 7;
+
+	for(; i<argc+6; i++){
+		args[i] = fullpath(argv[i-6]);
 	}
 
 	args[i++] = strdup(libflag);
@@ -194,7 +211,7 @@ compilefile(int argc, char **argv)
 		execvp(args[0], args);
 	else {
 		waitpid(pid, NULL, 0);
-		for(i=6; i<nfiles-1; i++){
+		for(i=7; i<nfiles-1; i++){
 			free(args[i]);
 		}
     }
@@ -207,7 +224,12 @@ lookupsym()
 {
 	Funcinfo  *fi;
 	void      *fptr;
-	void *h = dlopen(TEMPFILE, RTLD_NOW | RTLD_GLOBAL);
+	void *h = dlopen(testlibpath, RTLD_LAZY);
+
+	if(h == NULL){
+		fprintf(stderr, "dlopen error\n");
+		return;
+	}
 
 	list_for_each_entry(fi, &namelist, node){
 		printf("%s\n", fi->funcname);
@@ -237,7 +259,7 @@ main(int argc, char **argv)
 
 	showfuncname();
 
-	remove("./"TEMPFILE);
+	remove(testlibpath);
 	printf(COLOR(GREEN, "==== TEST END ====\n"));
 	return 0;
 }
