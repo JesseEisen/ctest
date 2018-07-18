@@ -29,7 +29,7 @@ void
 ctestinit(void)
 {
 	INIT_LIST_HEAD(&namelist);
-	
+
 	char *enval = getenv("CTEST_LIB_PATH");
 	if(enval == NULL)
 		sprintf(libpath, "/usr/local/lib");
@@ -37,7 +37,7 @@ ctestinit(void)
 		sprintf(libpath, "%s", enval);
 
 	sprintf(testlibpath, "%s/%s", libpath, TEMPFILE);
-	
+
 	printf(COLOR(GREEN, "==== TEST START ====\n"));
 
 }
@@ -187,18 +187,26 @@ void
 compilefile(int argc, char **argv)
 {
 	pid_t  pid;
-	int    nfiles;
+	int    i;
+	int    nfiles, offset, start;
 	char  *libflag = "-lutil";
-	char  linkpath[MAX_PATH_LEN], runpath[MAX_PATH_LEN];
+	char  linkpath[MAX_PATH_LEN];
 
-	sprintf(linkpath, "-L%s", libpath);
+	sprintf(linkpath, "-L%s/", libpath);
+#if __linux__
+	char  runpath[MAX_PATH_LEN];
 	sprintf(runpath, "-Wl,-rpath=%s", libpath);
+	char *args[MAXARGS] = {"gcc", linkpath, "-fPIC", "-shared", "-o", testlibpath, runpath};
+	start  = 7;
+	offset = 6;
+#elif __APPLE__
+	char *args[MAXARGS] = {"gcc", linkpath, "-fPIC", "-shared", "-o", testlibpath};
+	start  = 6;
+	offset = 5;
+#endif
 
-	char *args[MAXARGS] = {"gcc", linkpath, "-fPIC", "-shared", "-o", TEMPFILE, runpath};
-	int i = 7;
-
-	for(; i<argc+6; i++){
-		args[i] = fullpath(argv[i-6]);
+	for(i=start; i<argc+offset; i++){
+		args[i] = fullpath(argv[i-offset]);
 	}
 
 	args[i++] = strdup(libflag);
@@ -211,7 +219,7 @@ compilefile(int argc, char **argv)
 		execvp(args[0], args);
 	else {
 		waitpid(pid, NULL, 0);
-		for(i=7; i<nfiles-1; i++){
+		for(i=start; i<nfiles-1; i++){
 			free(args[i]);
 		}
     }
@@ -224,10 +232,16 @@ lookupsym()
 {
 	Funcinfo  *fi;
 	void      *fptr;
-	void *h = dlopen(testlibpath, RTLD_LAZY);
-
+	void      *h;
+	printf("testlibpath: %s\n", testlibpath);
+#if __linux__
+	h = dlopen(testlibpath, RTLD_LAZY);
+#elif __APPLE__
+	setenv("DYLD_LIBRARY_PATH", libpath, 1);
+	h = dlopen(testlibpath, RTLD_LAZY);
+#endif
 	if(h == NULL){
-		fprintf(stderr, "dlopen error\n");
+		fprintf(stderr, "dlopen error: %s\n", dlerror());
 		return;
 	}
 
