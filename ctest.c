@@ -234,12 +234,12 @@ lookupsym()
 	void      *fptr;
 	void      *h;
 	printf("testlibpath: %s\n", testlibpath);
-#if __linux__
-	h = dlopen(testlibpath, RTLD_LAZY);
-#elif __APPLE__
+
+#if __APPLE__
 	setenv("DYLD_LIBRARY_PATH", libpath, 1);
-	h = dlopen(testlibpath, RTLD_LAZY);
 #endif
+
+	h = dlopen(testlibpath, RTLD_LAZY);
 	if(h == NULL){
 		fprintf(stderr, "dlopen error: %s\n", dlerror());
 		return;
