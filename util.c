@@ -39,6 +39,10 @@ display_assertion(const char *filename, size_t assertion_line)
 	fclose(file);
 }
 
+/*
+ * display the what you want to display
+ */
+
 static void
 display_output(char *output)
 {
@@ -81,6 +85,21 @@ intequal
 		display_output("passed");
 }
 
+void
+intnequal
+(
+    int expect,
+    int actual,
+    int lineno,
+    const char *fcname,
+    const char *fname
+)
+{
+	if(expect == actual)
+		display_assertion(fname, lineno);
+	else
+		display_output("passed");
+}
 
 void
 strequal
@@ -101,3 +120,20 @@ strequal
 }
 
 
+void
+strnequal
+(
+ 	char* expect,
+ 	char* actual,
+ 	int lineno,
+ 	const char *fcname,
+ 	const char *fname
+ )
+{
+	if((expect != NULL) && (actual != NULL)){
+		if(strcmp(expect, actual) == 0)
+			display_assertion(fname, lineno);
+		else
+			display_output("passed");
+	}
+}

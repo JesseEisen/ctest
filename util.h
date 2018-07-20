@@ -20,4 +20,33 @@ intequal
     const char *fname
 );
 
+void
+intnequal
+(
+    int expect,
+    int actual,
+    int lineno,
+    const char *fcname,
+    const char *fname
+);
+
+void
+strequal
+(
+    int expect,
+    int actual,
+    int lineno,
+    const char *fcname,
+    const char *fname
+);
+
+void
+strnequal
+(
+    int expect,
+    int actual,
+    int lineno,
+    const char *fcname,
+    const char *fname
+);
 #endif /*  __UTIL_H__ */
